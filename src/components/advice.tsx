@@ -1,58 +1,58 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaDiceFive } from "react-icons/fa";
 
-import axios from "utils/axios";
-import styles from "styles/components/advice.module.scss";
+import axios from "@utils/axios";
+import styles from "@styles/components/advice.module.scss";
 
 interface Advice {
-  advice: string;
-  id: string;
+	advice: string;
+	id: string;
 }
 
 const Advice: React.FC = () => {
-  const [advice, setAdvice] = useState<Advice>({ advice: "", id: "" });
-  const [callback, setCallback] = useState(false);
+	const [advice, setAdvice] = useState<Advice | null>(null);
+	const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const getAdvice = async () => {
-      try {
-        const ADVICESLIP_API_URI = "https://api.adviceslip.com/advice";
-        const { data } = await axios.get(ADVICESLIP_API_URI);
-        setAdvice({ ...data.slip });
-      } catch (error) {
-        alert(error);
-      }
-    };
+	const fetchAdvice = useCallback(async () => {
+		setLoading(true);
 
-    getAdvice();
-  }, [callback]);
+		try {
+			const { data } = await axios.get("https://api.adviceslip.com/advice");
+			setAdvice(data.slip);
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	}, []);
 
-  return (
-    <div className={styles["advice"]}>
-      {advice.id ? (
-        <>
-          <h3>Advice #{advice.id}</h3>
-          <h2>"{advice.advice}"</h2>
+	useEffect(() => {
+		fetchAdvice();
+	}, [fetchAdvice]);
 
-          <div className={styles["delimitation"]}>
-            <div className={styles["horizontal_line"]} />
-            <div className={styles["vertical_line"]} />
-            <div className={styles["vertical_line"]} />
-            <div className={styles["horizontal_line"]} />
-          </div>
-        </>
-      ) : (
-        <h2>Loading...</h2>
-      )}
+	return (
+		<div className={styles["advice"]}>
+			{loading ? (
+				<h2>Loading...</h2>
+			) : advice && advice.id ? (
+				<>
+					<h3>Advice #{advice.id}</h3>
+					<h2>"{advice.advice}"</h2>
 
-      <div
-        className={styles["button"]}
-        onClick={() => setCallback(!callback)}
-      >
-        <FaDiceFive />
-      </div>
-    </div>
-  );
+					<div className={styles["delimitation"]}>
+						<div className={styles["horizontal_line"]} />
+						<div className={styles["vertical_line"]} />
+						<div className={styles["vertical_line"]} />
+						<div className={styles["horizontal_line"]} />
+					</div>
+				</>
+			) : null}
+
+			<div className={styles["button"]} onClick={fetchAdvice}>
+				<FaDiceFive />
+			</div>
+		</div>
+	);
 };
 
 export default Advice;
